@@ -1,0 +1,19 @@
+# Secrets and credentials
+config/.env
+config/credentials.json
+config/token.json
+
+# Runtime state database
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+
+# Temp files
+*.tmp

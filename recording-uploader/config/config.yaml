@@ -1,0 +1,42 @@
+# Source mode: "local" or "drive"
+source_mode: local
+
+local:
+  watch_folder: "C:/RadioRecordings"
+  audio_extensions: [".mp3", ".wav", ".flac", ".m4a"]
+
+drive:
+  folder_id: "YOUR_GOOGLE_DRIVE_FOLDER_ID"
+  poll_interval_seconds: 60
+
+filename:
+  # Format matching your audio file stems — e.g. 2026-04-28 14-30.mp3
+  datetime_format: "%Y-%m-%d %H-%M"
+  # Minutes of tolerance when matching filename datetime to sheet row
+  match_tolerance_minutes: 10
+
+google_sheets:
+  spreadsheet_id: "YOUR_SPREADSHEET_ID"
+  sheet_name: "Sheet1"
+  datetime_column: "datetime"
+  show_name_column: "show_name"
+  description_column: "description"
+  image_url_column: "image_url"
+  secondary_artist_column: "secondary_artist"
+
+soundcloud:
+  genre: "Radio"
+  sharing: "public"   # "public" or "private"
+  license: "all-rights-reserved"
+
+alerts:
+  enabled: true
+  smtp_host: "smtp.office365.com"   # or smtp.gmail.com
+  smtp_port: 587
+  from_address: "alerts@yourstation.com"
+  to_addresses:
+    - "admin@yourstation.com"
+  subject_prefix: "[RadioUploader]"
+
+state:
+  db_path: "data/state.db"
