@@ -1,0 +1,16 @@
+# URL of the Icecast/Airtime audio stream to consume
+stream_url: "https://netilradio.out.airtime.pro/netilradio_a"
+
+# Airtime API endpoint used to look up the currently live show
+stream_info_url: "https://netilradio.airtime.pro/api/live-info"
+
+# Bytes to buffer before each recognition attempt.
+# At 128 kbps, 163840 bytes ≈ 10 seconds of audio.
+recognition_chunk_bytes: 163840
+
+# Minimum gap in seconds between consecutive recognition attempts.
+# This prevents hammering the Shazam API while a known track is still playing.
+recognition_interval_seconds: 30
+
+# Path (relative to this directory) for the output tracklist CSV.
+output_csv: "tracklist.csv"

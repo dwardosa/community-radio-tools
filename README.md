@@ -2,6 +2,15 @@
 
 A toolbox built to assist the running of community radio stations with tasks such as automated track uploading, scheduling, and track listing.
 
+## Tracklisting
+
+`tracklisting` is a headless Python bot that streams a live radio station, identifies tracks in real time using the Shazam API, and saves them to a CSV file grouped by show slot.
+
+It connects to an Icecast/Airtime audio stream, queries the Airtime schedule API to determine the current show, and appends each newly identified track (title, artist, show name, UTC timestamp, Shazam URL) to `tracklist.csv`. Duplicate detections are suppressed so each song appears once per play.
+
+See [tracklisting/README.md](tracklisting/README.md) for full setup and configuration details.
+
+
 ## Recording Uploader
 
 `recording-uploader` is a Python automation tool for publishing recorded shows to SoundCloud. It watches a local folder or polls a Google Drive folder for new audio files, matches each file to show metadata in Google Sheets, uploads the track to SoundCloud, records the upload in a local state database to avoid duplicates, and sends email alerts if any stage fails.
