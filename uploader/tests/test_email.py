@@ -3,6 +3,8 @@ Unit tests for alerts.email — EmailAlerter.
 
 SMTP is fully mocked so no real mail server or credentials are needed.
 """
+import email
+import email as stdlib_email
 import smtplib
 from unittest.mock import MagicMock, patch
 
@@ -83,9 +85,15 @@ class TestSendErrorEnabled:
             line for line in captured_messages[0].splitlines()
             if line.lower().startswith("subject:")
         )
-        assert "SOUNDCLOUD_UPLOAD" in subject_line
-        assert "2026-04-28 14-30.mp3" in subject_line
-        assert "[RadioUploader]" in subject_line
+        _, _, raw_value = subject_line.partition(": ")
+        decoded_subject = email.header.decode_header(raw_value)[0][0]
+        if isinstance(decoded_subject, bytes):
+            decoded_subject = decoded_subject.decode("utf-8")
+
+        assert "SOUNDCLOUD_UPLOAD" in decoded_subject
+        assert "2026-04-28 14-30.mp3" in decoded_subject
+        assert "[RadioUploader]" in decoded_subject
+
 
     def test_email_body_contains_exception_details(self, alerter, mocker):
         # Arrange
@@ -104,10 +112,11 @@ class TestSendErrorEnabled:
         # Act
         alerter.send_error("SHEETS_LOOKUP", "file.mp3", exc)
 
-        # Assert
-        full_message = captured_messages[0]
-        assert "LookupError" in full_message
-        assert "Row not found in sheet" in full_message
+        # Assert — body is base64-encoded inside the multipart message; decode it
+        parsed = stdlib_email.message_from_string(captured_messages[0])
+        body_text = parsed.get_payload(0).get_payload(decode=True).decode("utf-8")
+        assert "LookupError" in body_text
+        assert "Row not found in sheet" in body_text
 
     def test_connects_to_configured_smtp_host_and_port(self, alerter, mocker):
         # Arrange

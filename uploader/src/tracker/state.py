@@ -78,5 +78,5 @@ def local_file_id(path: str) -> str:
     Build a unique ID for a local file that changes if the file is replaced
     (different mtime) but stays stable while the file is untouched.
     """
-    mtime = int(Path(path).stat().st_mtime)
-    return f"local:{Path(path).resolve()}:{mtime}"
+    mtime_ns = Path(path).stat().st_mtime_ns
+    return f"local:{Path(path).resolve()}:{mtime_ns}"
