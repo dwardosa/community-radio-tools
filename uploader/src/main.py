@@ -55,11 +55,21 @@ def load_config() -> dict:
 
 def parse_datetime_from_filename(filename: str, fmt: str) -> datetime:
     """
-    Strip the file extension and parse the stem as a datetime using fmt.
+    Strip the file extension and parse a datetime prefix from the stem using fmt.
+    Tries the full stem first, then progressively shorter space-separated prefixes,
+    to support stems like '20260427 1100 Recording'.
     Returns a UTC-aware datetime. Raises ValueError if parsing fails.
     """
-    dt = datetime.strptime(Path(filename).stem, fmt)
-    return dt.replace(tzinfo=timezone.utc)
+    stem = Path(filename).stem
+    parts = stem.split(" ")
+    for i in range(len(parts), 0, -1):
+        candidate = " ".join(parts[:i])
+        try:
+            dt = datetime.strptime(candidate, fmt)
+            return dt.replace(tzinfo=timezone.utc)
+        except ValueError:
+            continue
+    raise ValueError(f"Cannot parse datetime from '{stem}' using format '{fmt}'")
 
 
 def download_image(url: str) -> str | None:

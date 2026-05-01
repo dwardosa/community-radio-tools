@@ -10,8 +10,8 @@ drive:
   poll_interval_seconds: 60
 
 filename:
-  # Format matching your audio file stems — e.g. 2026-04-28 14-30.mp3
-  datetime_format: "%Y-%m-%d %H-%M"
+  # Format matching your audio file stems — e.g. 20260427 1100 Recording.mp3
+  datetime_format: "%Y%m%d %H%M"
   # Minutes of tolerance when matching filename datetime to sheet row
   match_tolerance_minutes: 10
 
