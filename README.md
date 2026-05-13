@@ -20,7 +20,7 @@ The uploader expects each audio filename to contain a broadcast date and time, f
 Install dependencies from the tool directory:
 
 ```bash
-cd recording-uploader
+cd uploader
 pip install -r requirements.txt
 ```
 
