@@ -2,6 +2,7 @@
 config/.env
 config/google-credentials.json
 config/token.json
+config/config.yaml
 
 # Runtime state database
 data/
