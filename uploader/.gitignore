@@ -1,6 +1,6 @@
 # Secrets and credentials
 config/.env
-config/credentials.json
+config/google-credentials.json
 config/token.json
 
 # Runtime state database
