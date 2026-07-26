@@ -59,9 +59,9 @@ class TestParseRowDatetime:
         from metadata.sheets import SheetsClient
         return SheetsClient._parse_row_datetime(value, row_num=2)
 
-    def test_parses_iso_datetime_with_space(self):
+    def test_parses_cross_platform_datetime_with_hyphen_separator(self):
         # Arrange
-        value = "2026-04-28 14:30"
+        value = "2026-04-28 14-30"
 
         # Act
         result = self._parse(value)
@@ -116,7 +116,7 @@ class TestParseRowDatetime:
 
 _HEADERS = ["datetime", "show_name", "description", "image_url", "secondary_artist"]
 _SHOW_ROW = [
-    "2026-04-28 14:30",
+    "2026-04-28 14-30",
     "The Morning Mix",
     "Weekly show with DJ Jane",
     "https://example.com/art.jpg",

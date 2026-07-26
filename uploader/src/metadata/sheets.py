@@ -26,7 +26,8 @@ class SheetsClient:
     Expected sheet columns (names configurable in config.yaml):
         datetime | show_name | description | image_url | secondary_artist
 
-    The datetime column should contain ISO-8601 strings, e.g. "2026-04-28 14:30".
+    The datetime column should contain consistent datetime strings, e.g.
+    "2026-04-28 14-30".
     """
 
     def __init__(self, config: dict):
@@ -143,13 +144,16 @@ class SheetsClient:
         Attempt to parse an ISO-8601 or common datetime string.
         Returns None (with a warning) if unparseable.
         """
-        # Try ISO format first (handles both "2026-04-28T14:30" and "2026-04-28 14:30")
+        # Accept both colon and hyphen minute separators so sheet values can
+        # match cross-platform-safe filename timestamps.
         for fmt in (
             "%Y-%m-%dT%H:%M:%S",
             "%Y-%m-%dT%H:%M",
             "%Y-%m-%d %H:%M:%S",
             "%Y-%m-%d %H:%M",
+            "%Y-%m-%d %H-%M",
             "%d/%m/%Y %H:%M",
+            "%d/%m/%Y %H-%M",
         ):
             try:
                 dt = datetime.strptime(value.strip(), fmt)

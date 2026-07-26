@@ -30,7 +30,7 @@ with patch("dotenv.load_dotenv"):
 @pytest.fixture
 def pipeline_config():
     return {
-        "filename": {"datetime_format": "%Y%m%d %H%M"},
+        "filename": {"datetime_format": "%Y-%m-%d %H-%M"},
         "google_sheets": {},
         "soundcloud": {},
         "alerts": {"enabled": False},
@@ -78,8 +78,8 @@ def _mock_alerter() -> MagicMock:
 class TestParseDatetimeFromFilename:
     def test_parses_valid_filename_correctly(self):
         # Arrange
-        filename = "20260427 1100 Recording.mp3"
-        fmt = "%Y%m%d %H%M"
+        filename = "2026-04-27 11-00 Recording.mp3"
+        fmt = "%Y-%m-%d %H-%M"
 
         # Act
         result = parse_datetime_from_filename(filename, fmt)
@@ -89,8 +89,8 @@ class TestParseDatetimeFromFilename:
 
     def test_result_is_utc_aware(self):
         # Arrange
-        filename = "20260427 1100 Recording.mp3"
-        fmt = "%Y%m%d %H%M"
+        filename = "2026-04-27 11-00 Recording.mp3"
+        fmt = "%Y-%m-%d %H-%M"
 
         # Act
         result = parse_datetime_from_filename(filename, fmt)
@@ -102,7 +102,7 @@ class TestParseDatetimeFromFilename:
     def test_raises_value_error_for_wrong_format(self):
         # Arrange
         filename = "not-a-date.mp3"
-        fmt = "%Y%m%d %H%M"
+        fmt = "%Y-%m-%d %H-%M"
 
         # Act / Assert
         with pytest.raises(ValueError):
@@ -110,8 +110,8 @@ class TestParseDatetimeFromFilename:
 
     def test_ignores_file_extension(self):
         # Arrange
-        filename = "20260427 1100 Recording.wav"
-        fmt = "%Y%m%d %H%M"
+        filename = "2026-04-27 11-00 Recording.wav"
+        fmt = "%Y-%m-%d %H-%M"
 
         # Act
         result = parse_datetime_from_filename(filename, fmt)
@@ -190,7 +190,7 @@ class TestProcessFileHappyPath:
         self, pipeline_config, tmp_path
     ):
         # Arrange
-        audio = tmp_path / "20260427 1100 Recording.mp3"
+        audio = tmp_path / "2026-04-27 11-00 Recording.mp3"
         audio.write_bytes(b"audio")
         sheets = _mock_sheets()
 
@@ -209,7 +209,7 @@ class TestProcessFileHappyPath:
 
     def test_calls_uploader_with_sheet_metadata(self, pipeline_config, tmp_path):
         # Arrange
-        audio = tmp_path / "20260427 1100 Recording.mp3"
+        audio = tmp_path / "2026-04-27 11-00 Recording.mp3"
         audio.write_bytes(b"audio")
         uploader = _mock_uploader()
 
@@ -232,7 +232,7 @@ class TestProcessFileHappyPath:
 
     def test_marks_file_as_processed_after_upload(self, pipeline_config, tmp_path):
         # Arrange
-        audio = tmp_path / "20260427 1100 Recording.mp3"
+        audio = tmp_path / "2026-04-27 11-00 Recording.mp3"
         audio.write_bytes(b"audio")
         state = _mock_state()
 
@@ -280,7 +280,7 @@ class TestProcessFileErrors:
         self, pipeline_config, tmp_path
     ):
         # Arrange
-        audio = tmp_path / "20260427 1100 Recording.mp3"
+        audio = tmp_path / "2026-04-27 11-00 Recording.mp3"
         audio.write_bytes(b"audio")
         alerter = _mock_alerter()
         sheets = MagicMock()
@@ -304,7 +304,7 @@ class TestProcessFileErrors:
         self, pipeline_config, tmp_path
     ):
         # Arrange
-        audio = tmp_path / "20260427 1100 Recording.mp3"
+        audio = tmp_path / "2026-04-27 11-00 Recording.mp3"
         audio.write_bytes(b"audio")
         alerter = _mock_alerter()
         uploader = MagicMock()
@@ -328,7 +328,7 @@ class TestProcessFileErrors:
         self, pipeline_config, tmp_path
     ):
         # Arrange
-        audio = tmp_path / "20260427 1100 Recording.mp3"
+        audio = tmp_path / "2026-04-27 11-00 Recording.mp3"
         audio.write_bytes(b"audio")
         uploader = _mock_uploader()
 
