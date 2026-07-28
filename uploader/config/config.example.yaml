@@ -15,8 +15,7 @@ drive:
   folder_id: "YOUR_GOOGLE_DRIVE_FOLDER_ID"
   poll_interval_seconds: 60
 
-filename:
-  # Format matching your audio file stems — e.g. 2026-04-27 11-00 Recording.mp3
+filename:  # Format matching your audio file stems — e.g. 2026-04-27 11-00 Recording.mp3
   datetime_format: "%Y-%m-%d %H-%M"
   # Minutes of tolerance when matching filename datetime to sheet row
   match_tolerance_minutes: 10
