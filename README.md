@@ -48,7 +48,7 @@ pip install -r requirements.txt
 Start the pipeline from the tool directory:
 
 ```bash
-cd recording-uploader
+cd uploader
 python run.py
 ```
 
