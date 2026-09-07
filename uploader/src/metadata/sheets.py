@@ -132,7 +132,7 @@ class SheetsClient:
             .values()
             .get(
                 spreadsheetId=self._spreadsheet_id,
-                range=self._sheet_name,
+                range=self._sheet_name
             )
             .execute()
         )

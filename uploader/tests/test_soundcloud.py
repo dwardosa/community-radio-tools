@@ -211,7 +211,7 @@ class TestUpload:
         data = upload_call[1]["data"]
         assert data["track[title]"] == "The Morning Mix"
         assert data["track[description]"] == "Weekly show"
-        assert data["track[artist]"] == "DJ Jane"
+        assert data["track[metadata_artist]"] == "DJ Jane"
         assert data["track[genre]"] == "Radio"
         assert data["track[sharing]"] == "public"
 
