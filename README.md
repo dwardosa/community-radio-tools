@@ -10,6 +10,17 @@ A toolbox built to assist the running of community radio stations with tasks suc
 
 The uploader expects each audio filename to contain a broadcast date and time, for example `2026-04-28 14-30.mp3`. This colon-free format is safe across macOS, Windows, and Linux filesystems. That timestamp is parsed using the format defined in `recording-uploader/config/config.yaml`, then matched against a row in a Google Sheet within a configurable tolerance window. The matched row supplies the show title, description, artwork URL, and secondary artist metadata used for the SoundCloud upload. After a successful upload, the artist receives an email containing the show URL and description.
 
+```mermaid
+flowchart LR
+	DJ[DJ] -->|Enters show details to spreadsheet | sheet[Google Sheet]
+	radioPC[Radio PC] -->|Uploads radio recording| drive[Google Drive folder]
+	sheet -->|Show details matched by time from spreadsheet | uploader[Recording uploader]
+	drive -->|New audio file detected| uploader
+	uploader -->|Uploads show and metadata| soundcloud[SoundCloud]
+	soundcloud -->|Show URL returned once complete| uploader
+	uploader -->|Sends show upload notification with URL via email| DJ
+```
+
 ### Requirements
 
 - Python 3.11+
