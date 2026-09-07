@@ -149,6 +149,13 @@ class DriveCollector:
                 .execute()
             )
             for f in resp.get("files", []):
+                logger.debug(
+                    "Found file: id=%s name=%r mime_type=%r parents=%r",
+                    f.get("id"),
+                    f.get("name"),
+                    f.get("mimeType"),
+                    f.get("parents"),
+                )
                 if self._is_audio_file(f):
                     yield f
             page_token = resp.get("nextPageToken")
@@ -198,6 +205,13 @@ class DriveCollector:
 
     def _is_audio_file(self, file_meta: dict) -> bool:
         """Identify audio by Drive MIME type or a configured filename extension."""
+
+        logger.info(
+            "Checking if file is audio: id=%s name=%r mime_type=%r",
+            file_meta.get("id"),
+            file_meta.get("name"),
+            file_meta.get("mimeType"),
+        )
         if file_meta.get("mimeType") in _AUDIO_MIME_TYPES:
             return True
         return Path(file_meta.get("name", "")).suffix.lower() in self._audio_extensions
