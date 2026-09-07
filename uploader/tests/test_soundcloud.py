@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 import requests
 
-from uploader.soundcloud import SoundCloudUploader, _TOKEN_URL, _TRACKS_URL
+from uploader.soundcloud import SoundCloudUploader, UploadResult, _TOKEN_URL, _TRACKS_URL
 
 
 # ---------------------------------------------------------------------------
@@ -51,7 +51,10 @@ def _mock_token_response(mocker, token: str = "fake_token"):
 def _mock_upload_response(mocker, track_id: str = "987654"):
     """Return a mock that simulates a successful SoundCloud track upload."""
     resp = mocker.MagicMock()
-    resp.json.return_value = {"id": int(track_id)}
+    resp.json.return_value = {
+        "id": int(track_id),
+        "permalink_url": "https://soundcloud.com/station/the-morning-mix",
+    }
     resp.raise_for_status.return_value = None
     return resp
 
@@ -161,7 +164,7 @@ class TestFetchToken:
 # ---------------------------------------------------------------------------
 
 class TestUpload:
-    def test_returns_track_id_on_success(self, uploader, mocker, tmp_path):
+    def test_returns_track_id_and_permalink_on_success(self, uploader, mocker, tmp_path):
         # Arrange
         audio_file = tmp_path / "2026-04-28 14-30.mp3"
         audio_file.write_bytes(b"fake audio data")
@@ -175,7 +178,7 @@ class TestUpload:
         )
 
         # Act
-        track_id = uploader.upload(
+        result = uploader.upload(
             audio_path=str(audio_file),
             show_name="The Morning Mix",
             description="Weekly show",
@@ -183,7 +186,10 @@ class TestUpload:
         )
 
         # Assert
-        assert track_id == "987654"
+        assert result == UploadResult(
+            track_id="987654",
+            url="https://soundcloud.com/station/the-morning-mix",
+        )
 
     def test_includes_metadata_fields_in_upload_payload(self, uploader, mocker, tmp_path):
         # Arrange

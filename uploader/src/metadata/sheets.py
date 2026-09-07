@@ -24,7 +24,7 @@ class SheetsClient:
     Looks up show metadata from a Google Sheet by matching a datetime value.
 
     Expected sheet columns (names configurable in config.yaml):
-        datetime | show_name | description | image_url | secondary_artist
+        datetime | show_name | description | image_url | secondary_artist | artist_email
 
     The datetime column should contain consistent datetime strings, e.g.
     "2026-04-28 14-30".
@@ -42,6 +42,7 @@ class SheetsClient:
         self._col_description: str = config["description_column"]
         self._col_image_url: str = config["image_url_column"]
         self._col_secondary_artist: str = config["secondary_artist_column"]
+        self._col_artist_email: str = config["artist_email_column"]
 
         creds = service_account.Credentials.from_service_account_file(
             os.environ["GOOGLE_CREDENTIALS_PATH"], scopes=_SCOPES
@@ -53,7 +54,7 @@ class SheetsClient:
         Find the sheet row whose datetime column is within tolerance of target_dt.
 
         Returns a dict with keys:
-            show_name, description, image_url, secondary_artist
+            datetime, show_name, description, image_url, secondary_artist, artist_email
 
         Raises:
             LookupError  — no matching row found within the tolerance window.
@@ -83,6 +84,7 @@ class SheetsClient:
         desc_idx = col_idx(self._col_description)
         img_idx = col_idx(self._col_image_url)
         artist_idx = col_idx(self._col_secondary_artist)
+        artist_email_idx = col_idx(self._col_artist_email)
 
         best_match = None
         best_delta = None
@@ -110,10 +112,12 @@ class SheetsClient:
             return row[idx].strip() if len(row) > idx else ""
 
         result = {
+            "datetime": safe_get(best_match, dt_idx),
             "show_name": safe_get(best_match, show_idx),
             "description": safe_get(best_match, desc_idx),
             "image_url": safe_get(best_match, img_idx),
             "secondary_artist": safe_get(best_match, artist_idx),
+            "artist_email": safe_get(best_match, artist_email_idx),
         }
         logger.info(
             "Matched sheet row for %s → show: '%s'",

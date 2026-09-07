@@ -44,6 +44,7 @@ def _make_client(rows: list[list], tolerance_minutes: int = 5):
         "description_column": "description",
         "image_url_column": "image_url",
         "secondary_artist_column": "secondary_artist",
+        "artist_email_column": "artist_email",
     }
     client = SheetsClient(config)
     client._fetch_all_rows = MagicMock(return_value=rows)
@@ -114,13 +115,21 @@ class TestParseRowDatetime:
 # SheetsClient.lookup_by_datetime
 # ---------------------------------------------------------------------------
 
-_HEADERS = ["datetime", "show_name", "description", "image_url", "secondary_artist"]
+_HEADERS = [
+    "datetime",
+    "show_name",
+    "description",
+    "image_url",
+    "secondary_artist",
+    "artist_email",
+]
 _SHOW_ROW = [
     "2026-04-28 14-30",
     "The Morning Mix",
     "Weekly show with DJ Jane",
     "https://example.com/art.jpg",
     "DJ Jane",
+    "dj.jane@example.com",
 ]
 
 
@@ -138,6 +147,8 @@ class TestLookupByDatetime:
         assert result["description"] == "Weekly show with DJ Jane"
         assert result["image_url"] == "https://example.com/art.jpg"
         assert result["secondary_artist"] == "DJ Jane"
+        assert result["datetime"] == "2026-04-28 14-30"
+        assert result["artist_email"] == "dj.jane@example.com"
 
     def test_matches_within_tolerance(self):
         # Arrange — target is 3 minutes after sheet row, within 5-min tolerance
@@ -181,8 +192,8 @@ class TestLookupByDatetime:
 
     def test_picks_closest_row_when_multiple_rows_in_tolerance(self):
         # Arrange — two rows, both within 5 mins; second is closer
-        row_far = ["2026-04-28 14:26", "Far Show", "Desc A", "", ""]
-        row_close = ["2026-04-28 14:29", "Close Show", "Desc B", "", ""]
+        row_far = ["2026-04-28 14:26", "Far Show", "Desc A", "", "", ""]
+        row_close = ["2026-04-28 14:29", "Close Show", "Desc B", "", "", ""]
         client = _make_client([_HEADERS, row_far, row_close], tolerance_minutes=5)
         target = datetime(2026, 4, 28, 14, 30, tzinfo=timezone.utc)
 
@@ -194,7 +205,7 @@ class TestLookupByDatetime:
 
     def test_skips_rows_with_empty_datetime_cell(self):
         # Arrange — first data row has blank datetime, second is valid
-        blank_row = ["", "Ghost Show", "Desc", "", ""]
+        blank_row = ["", "Ghost Show", "Desc", "", "", ""]
         client = _make_client([_HEADERS, blank_row, _SHOW_ROW])
         target = datetime(2026, 4, 28, 14, 30, tzinfo=timezone.utc)
 

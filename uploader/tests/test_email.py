@@ -159,3 +159,44 @@ class TestSendErrorDisabled:
 
         # Assert
         mock_smtp_class.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# EmailAlerter.send_upload_notification
+# ---------------------------------------------------------------------------
+
+class TestSendUploadNotification:
+    def test_sends_artist_the_uploaded_show_url_and_description(self, alerter, mocker):
+        # Arrange
+        captured_messages = []
+
+        def fake_sendmail(from_addr, to_addrs, msg_string):
+            captured_messages.append((from_addr, to_addrs, msg_string))
+
+        mock_smtp = mocker.MagicMock()
+        mock_smtp.sendmail.side_effect = fake_sendmail
+        mock_smtp.__enter__ = mocker.MagicMock(return_value=mock_smtp)
+        mock_smtp.__exit__ = mocker.MagicMock(return_value=False)
+        mocker.patch("alerts.email.smtplib.SMTP", return_value=mock_smtp)
+
+        # Act
+        alerter.send_upload_notification(
+            artist_email="artist@station.com",
+            show_name="The Morning Mix",
+            show_datetime="2026-04-28 14-30",
+            url="https://soundcloud.com/station/the-morning-mix",
+            description="Weekly show with DJ Jane",
+        )
+
+        # Assert
+        from_addr, to_addrs, message = captured_messages[0]
+        parsed = stdlib_email.message_from_string(message)
+        body_text = parsed.get_payload(0).get_payload(decode=True).decode("utf-8")
+        assert from_addr == "alerts@station.com"
+        assert to_addrs == ["artist@station.com"]
+        assert parsed["To"] == "artist@station.com"
+        assert parsed["Subject"] == "The Morning Mix at 2026-04-28 14-30 has just been uploaded"
+        assert body_text == (
+            "https://soundcloud.com/station/the-morning-mix\n"
+            "Weekly show with DJ Jane"
+        )

@@ -17,6 +17,7 @@ Register an app and obtain credentials at:
 import logging
 import os
 from contextlib import ExitStack
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import tempfile
@@ -31,6 +32,14 @@ _JSON_ACCEPT_HEADER = "application/json; charset=utf-8"
 
 # SoundCloud upload can be slow for large audio files.
 _UPLOAD_TIMEOUT_SECONDS = 600
+
+
+@dataclass(frozen=True)
+class UploadResult:
+    """Identifiers returned by a successful SoundCloud upload."""
+
+    track_id: str
+    url: str
 
 
 class SoundCloudUploader:
@@ -66,7 +75,7 @@ class SoundCloudUploader:
         description: str,
         secondary_artist: str,
         artwork_path: str | None = None,
-    ) -> str:
+    ) -> UploadResult:
         """
         Upload an audio file to SoundCloud with the provided metadata.
 
@@ -78,7 +87,7 @@ class SoundCloudUploader:
             artwork_path:      Optional absolute path to a JPEG/PNG artwork image.
 
         Returns:
-            The SoundCloud track ID (as a string) of the newly created track.
+            The new SoundCloud track ID and public permalink URL.
 
         Raises:
             requests.HTTPError on API failure.
@@ -129,9 +138,11 @@ class SoundCloudUploader:
                 ) from exc
             resp.raise_for_status()
 
-        track_id = str(resp.json()["id"])
+        result = resp.json()
+        track_id = str(result["id"])
+        track_url = result["permalink_url"]
         logger.info("Upload complete — SoundCloud track ID: %s", track_id)
-        return track_id
+        return UploadResult(track_id=track_id, url=track_url)
 
     # ------------------------------------------------------------------
     # Internal helpers

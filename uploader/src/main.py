@@ -140,7 +140,7 @@ def process_file(
 
     # 4. SoundCloud upload
     try:
-        track_id = uploader.upload(
+        upload_result = uploader.upload(
             audio_path=audio_path,
             show_name=meta["show_name"],
             description=meta["description"],
@@ -155,10 +155,25 @@ def process_file(
         if artwork_path:
             Path(artwork_path).unlink(missing_ok=True)
 
-    # 5. Mark as processed
+    # 5. Notify the artist. Alert failures are handled inside the alerter.
+    alerter.send_upload_notification(
+        artist_email=meta["artist_email"],
+        show_name=meta["show_name"],
+        show_datetime=meta["datetime"],
+        url=upload_result.url,
+        description=meta["description"],
+    )
+
+    # 6. Mark as processed
     source_label = "drive" if source_id.startswith("drive:") else "local"
-    state.mark_processed(source_id, source=source_label, soundcloud_track_id=track_id)
-    logger.info("Finished '%s' → SoundCloud track ID %s", filename, track_id)
+    state.mark_processed(
+        source_id,
+        source=source_label,
+        soundcloud_track_id=upload_result.track_id,
+    )
+    logger.info(
+        "Finished '%s' → SoundCloud track ID %s", filename, upload_result.track_id
+    )
 
 
 # ------------------------------------------------------------------

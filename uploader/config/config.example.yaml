@@ -28,6 +28,7 @@ google_sheets:
   description_column: "description"
   image_url_column: "image_url"
   secondary_artist_column: "secondary_artist"
+  artist_email_column: "artist_email"
 
 soundcloud:
   genre: "Radio"

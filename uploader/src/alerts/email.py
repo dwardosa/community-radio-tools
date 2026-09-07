@@ -85,3 +85,38 @@ class EmailAlerter:
             logger.error(
                 "Failed to send alert email for %s / %s: %s", step, filename, mail_exc
             )
+
+    def send_upload_notification(
+        self,
+        artist_email: str,
+        show_name: str,
+        show_datetime: str,
+        url: str,
+        description: str,
+    ) -> None:
+        """Send the artist a notification that their show is now available."""
+        if not self._enabled:
+            logger.debug("Alerts disabled — skipping upload email for %s", show_name)
+            return
+
+        subject = f"{show_name} at {show_datetime} has just been uploaded"
+        msg = MIMEMultipart()
+        msg["From"] = self._from_address
+        msg["To"] = artist_email
+        msg["Subject"] = subject
+        msg.attach(MIMEText(f"{url}\n{description}", "plain", "utf-8"))
+
+        try:
+            with smtplib.SMTP(self._smtp_host, self._smtp_port, timeout=30) as server:
+                server.ehlo()
+                server.starttls()
+                server.login(self._username, self._password)
+                server.sendmail(self._from_address, [artist_email], msg.as_string())
+            logger.info("Upload email sent to %s for %s", artist_email, show_name)
+        except Exception as mail_exc:
+            logger.error(
+                "Failed to send upload email to %s for %s: %s",
+                artist_email,
+                show_name,
+                mail_exc,
+            )

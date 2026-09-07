@@ -12,6 +12,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
+from uploader.soundcloud import UploadResult
 
 # main.py triggers load_dotenv at import time; suppress it.
 with patch("dotenv.load_dotenv"):
@@ -56,6 +57,8 @@ def _mock_sheets(meta: dict | None = None) -> MagicMock:
             "description": "Weekly show",
             "image_url": "https://example.com/art.jpg",
             "secondary_artist": "DJ Jane",
+            "datetime": "2026-04-27 11-00",
+            "artist_email": "dj.jane@example.com",
         }
     sheets.lookup_by_datetime.return_value = meta
     return sheets
@@ -63,7 +66,10 @@ def _mock_sheets(meta: dict | None = None) -> MagicMock:
 
 def _mock_uploader(track_id: str = "123456") -> MagicMock:
     uploader = MagicMock()
-    uploader.upload.return_value = track_id
+    uploader.upload.return_value = UploadResult(
+        track_id=track_id,
+        url="https://soundcloud.com/station/the-morning-mix",
+    )
     return uploader
 
 
@@ -247,6 +253,29 @@ class TestProcessFileHappyPath:
         # Assert
         state.mark_processed.assert_called_once_with(
             "local:id:1", source="local", soundcloud_track_id="SC-789"
+        )
+
+    def test_notifies_artist_after_a_successful_upload(self, pipeline_config, tmp_path):
+        # Arrange
+        audio = tmp_path / "2026-04-27 11-00 Recording.mp3"
+        audio.write_bytes(b"audio")
+        alerter = _mock_alerter()
+
+        with patch("main.download_image", return_value=None):
+            # Act
+            process_file(
+                str(audio), audio.name, "local:id:1",
+                pipeline_config, _mock_state(), _mock_sheets(),
+                _mock_uploader(), alerter,
+            )
+
+        # Assert
+        alerter.send_upload_notification.assert_called_once_with(
+            artist_email="dj.jane@example.com",
+            show_name="The Morning Mix",
+            show_datetime="2026-04-27 11-00",
+            url="https://soundcloud.com/station/the-morning-mix",
+            description="Weekly show",
         )
 
 
