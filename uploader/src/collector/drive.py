@@ -34,6 +34,7 @@ _AUDIO_MIME_TYPES = frozenset(
         "audio/ogg",
     ]
 )
+_DEFAULT_AUDIO_EXTENSIONS = frozenset([".mp3", ".wav", ".flac", ".m4a"])
 
 
 class DriveCollector:
@@ -51,6 +52,11 @@ class DriveCollector:
     def __init__(self, config: dict, callback, state_tracker):
         self._folder_id = config["folder_id"]
         self._poll_interval = config.get("poll_interval_seconds", 60)
+        self._audio_extensions = frozenset(
+            extension.lower()
+            for extension in config.get("audio_extensions", _DEFAULT_AUDIO_EXTENSIONS)
+        )
+        self._shared_drive_id = config.get("shared_drive_id")
         self._callback = callback
         self._state = state_tracker
         self._running = False
@@ -81,6 +87,7 @@ class DriveCollector:
         )
         while self._running:
             time.sleep(self._poll_interval)
+            logger.info("Polling for changes in Drive folder %s …", self._folder_id)
             for file_meta in self._poll_changes():
                 source_id = f"drive:{file_meta['id']}"
                 if not self._state.is_processed(source_id):
@@ -116,30 +123,33 @@ class DriveCollector:
     # ------------------------------------------------------------------
 
     def _fetch_start_token(self) -> str:
-        return (
-            self._service.changes()
-            .getStartPageToken()
-            .execute()["startPageToken"]
-        )
+        options = {"supportsAllDrives": True}
+        if self._shared_drive_id:
+            options["driveId"] = self._shared_drive_id
+        return self._service.changes().getStartPageToken(**options).execute()[
+            "startPageToken"
+        ]
 
     def _list_existing_audio(self):
         """List all audio files currently in the watched folder."""
         page_token = None
         while True:
+            options = {
+                "q": f"'{self._folder_id}' in parents and trashed=false",
+                "fields": "nextPageToken, files(id, name, mimeType)",
+                "pageToken": page_token,
+                "supportsAllDrives": True,
+                "includeItemsFromAllDrives": True,
+            }
+            if self._shared_drive_id:
+                options.update(corpora="drive", driveId=self._shared_drive_id)
             resp = (
                 self._service.files()
-                .list(
-                    q=(
-                        f"'{self._folder_id}' in parents"
-                        " and trashed=false"
-                    ),
-                    fields="nextPageToken, files(id, name, mimeType)",
-                    pageToken=page_token,
-                )
+                .list(**options)
                 .execute()
             )
             for f in resp.get("files", []):
-                if f.get("mimeType") in _AUDIO_MIME_TYPES:
+                if self._is_audio_file(f):
                     yield f
             page_token = resp.get("nextPageToken")
             if not page_token:
@@ -150,22 +160,34 @@ class DriveCollector:
         new_files = []
         page_token = self._page_token
         while page_token:
+            options = {
+                "pageToken": page_token,
+                "fields": (
+                    "nextPageToken, newStartPageToken,"
+                    " changes(fileId, file(id, name, mimeType, parents))"
+                ),
+                "spaces": "drive",
+                "supportsAllDrives": True,
+                "includeItemsFromAllDrives": True,
+            }
+            if self._shared_drive_id:
+                options["driveId"] = self._shared_drive_id
             resp = (
                 self._service.changes()
-                .list(
-                    pageToken=page_token,
-                    fields=(
-                        "nextPageToken, newStartPageToken,"
-                        " changes(fileId, file(id, name, mimeType, parents))"
-                    ),
-                    spaces="drive",
-                )
+                .list(**options)
                 .execute()
             )
             for change in resp.get("changes", []):
                 f = change.get("file") or {}
+                logger.debug(
+                    "Drive change: id=%s name=%r mime_type=%r parents=%r",
+                    change.get("fileId"),
+                    f.get("name"),
+                    f.get("mimeType"),
+                    f.get("parents"),
+                )
                 if (
-                    f.get("mimeType") in _AUDIO_MIME_TYPES
+                    self._is_audio_file(f)
                     and self._folder_id in (f.get("parents") or [])
                 ):
                     new_files.append(f)
@@ -173,3 +195,9 @@ class DriveCollector:
             if "newStartPageToken" in resp:
                 self._page_token = resp["newStartPageToken"]
         return new_files
+
+    def _is_audio_file(self, file_meta: dict) -> bool:
+        """Identify audio by Drive MIME type or a configured filename extension."""
+        if file_meta.get("mimeType") in _AUDIO_MIME_TYPES:
+            return True
+        return Path(file_meta.get("name", "")).suffix.lower() in self._audio_extensions

@@ -14,6 +14,9 @@ local:
 drive:
   folder_id: "YOUR_GOOGLE_DRIVE_FOLDER_ID"
   poll_interval_seconds: 60
+  audio_extensions: [".mp3", ".wav", ".flac", ".m4a"]
+  # Set this when folder_id belongs to a Google Shared Drive. 
+  # shared_drive_id: "YOUR_GOOGLE_SHARED_DRIVE_ID"
 
 filename:  # Format matching your audio file stems — e.g. 2026-04-27 11-00 Recording.mp3
   datetime_format: "%Y-%m-%d %H-%M"
